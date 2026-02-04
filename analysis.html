@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Transmission Grid: Distance, Power, and Land Use by Voltage</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --fg: #202124;
+    --fg2: #5F6368;
+    --fg3: #9AA0A6;
+    --fg4: #BDC1C6;
+    --fg5: #DADCE0;
+    --rule: #DADCE0;
+    --rule-light: #E8EAED;
+    --bg: #FFFFFF;
+    --accent: #EA4335;
+    --blue: #4285F4;
+    --green: #34A853;
+    --green-light: #81C995;
+    --yellow: #FBBC04;
+    --earth: #E8F0FE;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Google Sans', 'IBM Plex Sans', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 40px 80px;
+  }
+
+  .nav {
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--fg3);
+  }
+  .nav a {
+    color: var(--blue);
+    text-decoration: none;
+  }
+  .nav a:hover { text-decoration: underline; }
+
+  /* ── Typography ── */
+  h1.title {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--fg);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--fg2);
+    margin-bottom: 40px;
+    line-height: 1.55;
+    max-width: 680px;
+  }
+  h2.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+  .section-sub {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--fg2);
+    margin-bottom: 28px;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  /* ── Hero Stats ── */
+  .hero-row {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-stat { display: flex; flex-direction: column; }
+  .hero-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--fg);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--fg3);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Dividers ── */
+  .section-break {
+    margin: 56px 0;
+    border: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ── Inline Legend ── */
+  .inline-legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 14px; height: 10px; border-radius: 1px; }
+  .legend-swatch.miles { background: var(--blue); opacity: 0.7; }
+  .legend-swatch.gw { background: var(--accent); opacity: 0.8; }
+  .legend-text { font-size: 12px; color: var(--fg2); }
+
+  /* ── Paired Bar Chart ── */
+  .row-group {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: start;
+    margin-bottom: 2px;
+  }
+  .row-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg);
+    padding-top: 6px;
+    text-align: right;
+    padding-right: 20px;
+    white-space: nowrap;
+  }
+  .row-label .unit { font-size: 11px; font-weight: 300; color: var(--fg3); }
+  .bar-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0 12px;
+    border-bottom: 1px solid var(--rule-light);
+  }
+  .row-group:last-child .bar-pair { border-bottom: none; }
+  .bar-row { display: flex; align-items: center; gap: 8px; height: 22px; }
+  .bar { height: 18px; border-radius: 1px; }
+  .bar.miles { background: var(--blue); opacity: 0.7; }
+  .bar.gw { background: var(--accent); opacity: 0.8; }
+  .bar-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--fg2);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .bar-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--fg3);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .bar-type-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--fg4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 56px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  /* ── Corridor Strips ── */
+  .corridor-pair {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 32px;
+  }
+  .corridor-col { flex: 1; }
+  .corridor-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 14px;
+  }
+  .corridor-label { width: 72px; flex-shrink: 0; text-align: right; }
+  .corridor-label .voltage {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--fg);
+    line-height: 1.1;
+  }
+  .corridor-label .meta {
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--fg3);
+  }
+  .corridor-strip-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .corridor-strip { height: 22px; border-radius: 2px; flex-shrink: 0; }
+  .corridor-strip.physical {
+    background: linear-gradient(to bottom, var(--earth) 0%, var(--green) 8%, var(--green-light) 50%, var(--green) 92%, var(--earth) 100%);
+    opacity: 0.85;
+  }
+  .corridor-strip.capacity {
+    background: linear-gradient(to bottom, var(--earth) 0%, var(--accent) 8%, #EF6E63 50%, var(--accent) 92%, var(--earth) 100%);
+    opacity: 0.85;
+  }
+  .corridor-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--fg2);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Hero Comparison Box ── */
+  .hero-compare {
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 32px 36px;
+    margin: 36px 0 0;
+    border: 1px solid var(--rule);
+  }
+  .hero-compare-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 3px;
+  }
+  .hero-compare-sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--fg2);
+    margin-bottom: 24px;
+  }
+  .hero-vis-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+  .hero-vis-row:last-of-type { margin-bottom: 0; }
+  .hero-vis-label {
+    width: 96px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .hero-vis-label .kv {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .hero-vis-label .detail {
+    font-size: 10px;
+    color: var(--fg3);
+    font-weight: 300;
+  }
+  .hero-vis-strip { flex: 1; position: relative; min-height: 14px; }
+  .hero-bar {
+    height: 44px;
+    border-radius: 2px;
+  }
+  .hero-bar-115 {
+    background: repeating-linear-gradient(90deg, var(--green) 0px, var(--green) 3px, var(--green-light) 3px, var(--green-light) 4px);
+    opacity: 0.7;
+  }
+  .hero-bar-765 {
+    background: var(--green);
+    opacity: 0.85;
+  }
+  .hero-vis-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--fg2);
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 56px;
+  }
+  .ratio-callout {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--accent);
+    text-align: right;
+    margin-top: 10px;
+  }
+  .ratio-sublabel {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--fg3);
+    text-align: right;
+  }
+
+  /* ── Source ── */
+  .source {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--fg4);
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    line-height: 1.65;
+  }
+  .source a { color: var(--blue); text-decoration: none; }
+  .source a:hover { text-decoration: underline; }
+
+  svg text { font-family: 'Google Sans', 'IBM Plex Sans', sans-serif; }
+  svg .mono { font-family: 'IBM Plex Mono', monospace; }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="nav">
+    <a href="macrogrid.html">Macrogrid Expansion &rarr;</a> &nbsp;|&nbsp; <a href="map.html">Map</a>
+  </div>
+
+  <h1 class="title">Higher-voltage lines are a small share of the grid but carry most of the power</h1>
+  <p class="subtitle">
+    The U.S. transmission network spans 422,000 miles across six voltage classes.
+    Lines at 345 kV and above represent just 23% of total line-miles but account for
+    63% of power-carrying capacity. HVDC, measured by thermal ratings rather than AC surge impedance,
+    is the most land-efficient technology per unit of power moved.
+  </p>
+
+  <div class="hero-row">
+    <div class="hero-stat">
+      <span class="hero-number">422,429</span>
+      <span class="hero-unit">Total line-miles</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-number">86,901</span>
+      <span class="hero-unit">GW-miles capacity</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-number">52,244</span>
+      <span class="hero-unit">Lines</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-number">489</span>
+      <span class="hero-unit">Owners</span>
+    </div>
+  </div>
+
+  <div class="section-label">Line-Miles vs. GW-Miles by Voltage Class</div>
+
+  <div class="inline-legend">
+    <div class="legend-item">
+      <div class="legend-swatch miles"></div>
+      <span class="legend-text">Line-miles (physical distance)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch gw"></div>
+      <span class="legend-text">GW-miles (power &times; distance)</span>
+    </div>
+  </div>
+
+  <div id="paired-chart"></div>
+
+  <hr class="section-break">
+  <h2 class="section-title">Land Use: Right-of-Way per Unit of Capacity</h2>
+  <p class="section-sub">
+    Higher-voltage lines need wider corridors&mdash;275 ft for 765 kV vs. 85 ft for 115 kV.
+    But because AC power capacity scales with V&sup2;, the right-of-way per GW drops sharply with voltage.
+    HVDC, with no reactive losses and just two conductors, is the most land-efficient of all.
+  </p>
+
+  <div class="corridor-pair">
+    <div class="corridor-col">
+      <div class="section-label">Physical ROW Width</div>
+      <div id="physical-corridors"></div>
+    </div>
+    <div class="corridor-col">
+      <div class="section-label">ROW to Move 1 GW</div>
+      <div id="capacity-corridors"></div>
+    </div>
+  </div>
+
+  <div class="hero-compare">
+    <div class="hero-compare-title">The land cost of low voltage</div>
+    <div class="hero-compare-sub">
+      Right-of-way to carry 1,951 MW&mdash;the thermal capacity of a single 765 kV line
+    </div>
+    <div class="hero-vis-row">
+      <div class="hero-vis-label">
+        <div class="kv">115 kV</div>
+        <div class="detail">36 parallel lines</div>
+      </div>
+      <div class="hero-vis-strip">
+        <div class="hero-bar hero-bar-115" id="hero-115"></div>
+      </div>
+      <div class="hero-vis-value" id="hero-115-val"></div>
+    </div>
+    <div class="hero-vis-row">
+      <div class="hero-vis-label">
+        <div class="kv">765 kV</div>
+        <div class="detail">1 line</div>
+      </div>
+      <div class="hero-vis-strip">
+        <div class="hero-bar hero-bar-765" id="hero-765"></div>
+      </div>
+      <div class="hero-vis-value" id="hero-765-val"></div>
+    </div>
+    <div class="ratio-callout" style="text-align:right; margin-top:12px;">11.2&times;</div>
+    <div class="ratio-sublabel" style="text-align:right;">more land at 115 kV</div>
+  </div>
+
+  <hr class="section-break">
+  <div class="section-label">Acres of Right-of-Way per GW-Mile</div>
+  <svg id="acres-chart" width="780" height="300"></svg>
+
+  <hr class="section-break">
+  <h2 class="section-title">Most of the land goes to the smallest lines</h2>
+  <p class="section-sub">
+    The U.S. transmission grid occupies 6 million acres of right-of-way&mdash;roughly the size of New Hampshire.
+    Lines at 100&ndash;161 kV consume 40% of that land but deliver just 15% of power capacity.
+    Lines at 345 kV and above use 38% of the land and deliver 67% of the power.
+  </p>
+
+  <div class="hero-row" style="gap:56px">
+    <div class="hero-stat">
+      <span class="hero-number">6.0M</span>
+      <span class="hero-unit">Acres of ROW</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-number">9,451</span>
+      <span class="hero-unit">Square miles</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-number">0.25%</span>
+      <span class="hero-unit">of contiguous U.S.</span>
+    </div>
+  </div>
+
+  <div class="section-label">Total Right-of-Way Acres vs. GW-Miles by Voltage Class</div>
+  <svg id="total-row-chart" width="780" height="360"></svg>
+
+  <div class="source">
+    Data: HIFLD Electric Power Transmission Lines (52,244 features, Feb 2026). AC capacity: surge impedance
+    loading (SIL = V&sup2; / 300&Omega;). HVDC capacity: known thermal/converter ratings by project.
+    Right-of-way widths: typical U.S. utility standards (EPRI, FERC siting guidelines).
+    Distances: Haversine formula on polyline geometry. Population: 335M (2025 est.).
+    Source: Homeland Infrastructure Foundation-Level Data (HIFLD), via ArcGIS Feature Service.
+    <br>See also: <a href="macrogrid.html">Macrogrid expansion analysis</a> | <a href="map.html">Interactive map</a>.
+  </div>
+
+</div>
+
+<script>
+const DATA = [
+  { label:"100\u2013161 kV", miles:235753, gw:13406, pctMi:55.8, pctGw:15.4, count:41747, capMw:54,   rowFt:85,  method:"SIL" },
+  { label:"220\u2013287 kV", miles:88650,  gw:15686, pctMi:21.0, pctGw:18.1, count:7106,  capMw:176,  rowFt:125, method:"SIL" },
+  { label:"345 kV",     miles:65508,  gw:25990, pctMi:15.5, pctGw:29.9, count:2540,  capMw:397,  rowFt:175, method:"SIL" },
+  { label:"500 kV",     miles:28534,  gw:23778, pctMi:6.8,  pctGw:27.4, count:795,   capMw:833,  rowFt:225, method:"SIL" },
+  { label:"765 kV",     miles:2410,   gw:4701,  pctMi:0.6,  pctGw:5.4,  count:46,    capMw:1951, rowFt:275, method:"SIL" },
+  { label:"HVDC",       miles:1573,   gw:3339,  pctMi:0.4,  pctGw:3.8,  count:10,    capMw:2122, rowFt:150, method:"Thermal" },
+];
+
+DATA.forEach(d => {
+  d.gwPerMile = d.gw / d.miles;
+  d.acresPerMile = d.rowFt * 5280 / 43560;
+  d.acresPerGwMi = d.acresPerMile / (d.capMw / 1000);
+  d.linesForGw = 1000 / d.capMw;
+  d.rowForGw = d.linesForGw * d.rowFt;
+  d.totalAcres = d.acresPerMile * d.miles;
+});
+const TOTAL_ACRES = DATA.reduce((s,d) => s + d.totalAcres, 0);
+DATA.forEach(d => { d.pctAcres = d.totalAcres / TOTAL_ACRES * 100; });
+
+const TOTAL = { miles: 422429, gw: 86901, count: 52244 };
+const maxVal = Math.max(...DATA.map(d => d.miles), ...DATA.map(d => d.gw));
+const barMax = 540;
+
+// 1. PAIRED BAR CHART
+(function() {
+  const el = document.getElementById('paired-chart');
+  DATA.forEach(d => {
+    const g = document.createElement('div');
+    g.className = 'row-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'row-label';
+    lbl.innerHTML = d.label.replace(/ kV/, '<span class="unit"> kV</span>');
+    const pair = document.createElement('div');
+    pair.className = 'bar-pair';
+    const mr = document.createElement('div'); mr.className = 'bar-row';
+    mr.innerHTML = `<span class="bar-type-label">miles</span><div class="bar miles" style="width:${d.miles/maxVal*barMax}px"></div><span class="bar-value">${d.miles.toLocaleString()}</span><span class="bar-pct">${d.pctMi}%</span>`;
+    const gr = document.createElement('div'); gr.className = 'bar-row';
+    gr.innerHTML = `<span class="bar-type-label">gw-mi</span><div class="bar gw" style="width:${d.gw/maxVal*barMax}px"></div><span class="bar-value">${d.gw.toLocaleString()}</span><span class="bar-pct">${d.pctGw}%</span>`;
+    pair.append(mr, gr);
+    g.append(lbl, pair);
+    el.appendChild(g);
+  });
+})();
+
+// 2. CORRIDOR STRIPS
+(function() {
+  const phys = document.getElementById('physical-corridors');
+  const cap = document.getElementById('capacity-corridors');
+  const maxP = Math.max(...DATA.map(d => d.rowFt));
+  const maxC = Math.max(...DATA.map(d => d.rowForGw));
+  const scale = 280;
+  DATA.forEach(d => {
+    const pr = document.createElement('div'); pr.className = 'corridor-row';
+    pr.innerHTML = `<div class="corridor-label"><div class="voltage">${d.label}</div><div class="meta">${d.capMw.toLocaleString()} MW</div></div><div class="corridor-strip-wrap"><div class="corridor-strip physical" style="width:${d.rowFt/maxP*scale}px"></div><span class="corridor-value">${d.rowFt} ft</span></div>`;
+    phys.appendChild(pr);
+    const cr = document.createElement('div'); cr.className = 'corridor-row';
+    cr.innerHTML = `<div class="corridor-label"><div class="voltage">${d.label}</div><div class="meta">${d.linesForGw.toFixed(1)} lines</div></div><div class="corridor-strip-wrap"><div class="corridor-strip capacity" style="width:${d.rowForGw/maxC*scale}px"></div><span class="corridor-value">${d.rowForGw.toFixed(0)} ft</span></div>`;
+    cap.appendChild(cr);
+  });
+})();
+
+// Hero comparison
+(function() {
+  const maxW = 550;
+  document.getElementById('hero-115').style.width = maxW + 'px';
+  document.getElementById('hero-765').style.width = (275/3084*maxW) + 'px';
+  document.getElementById('hero-115-val').textContent = '3,084 ft';
+  document.getElementById('hero-765-val').textContent = '275 ft';
+})();
+
+// 3. ACRES PER GW-MILE LOLLIPOP
+(function() {
+  const svg = document.getElementById('acres-chart');
+  const W=780, H=300, L=80, R=150, T=20, B=40;
+  const pW=W-L-R, pH=H-T-B;
+  const maxA = Math.max(...DATA.map(d => d.acresPerGwMi));
+  const x = v => L+(v/maxA)*pW;
+  const rH = pH/DATA.length;
+  const y = i => T+i*rH+rH/2;
+  const ns = 'http://www.w3.org/2000/svg';
+
+  [0,50,100,150,200].forEach(v => {
+    if (v > maxA*1.05) return;
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1',x(v)); line.setAttribute('x2',x(v));
+    line.setAttribute('y1',T); line.setAttribute('y2',T+pH+6);
+    line.setAttribute('stroke',v===0?'#9AA0A6':'#E8EAED');
+    line.setAttribute('stroke-width',v===0?'1':'0.5');
+    svg.appendChild(line);
+    const t = document.createElementNS(ns,'text');
+    t.setAttribute('x',x(v)); t.setAttribute('y',T+pH+22);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','11');
+    t.setAttribute('fill','#9AA0A6'); t.classList.add('mono');
+    t.textContent = v; svg.appendChild(t);
+  });
+  const axL = document.createElementNS(ns,'text');
+  axL.setAttribute('x',x(maxA/2)); axL.setAttribute('y',T+pH+38);
+  axL.setAttribute('text-anchor','middle'); axL.setAttribute('font-size','11');
+  axL.setAttribute('fill','#9AA0A6'); axL.textContent = 'Acres per GW-mile';
+  svg.appendChild(axL);
+
+  const baseAcres = DATA[0].acresPerGwMi;
+  DATA.forEach((d,i) => {
+    const cy = y(i);
+    if(i>0) {
+      const sep = document.createElementNS(ns,'line');
+      sep.setAttribute('x1',L); sep.setAttribute('x2',W-R);
+      sep.setAttribute('y1',T+i*rH); sep.setAttribute('y2',T+i*rH);
+      sep.setAttribute('stroke','#E8EAED'); sep.setAttribute('stroke-width','0.5');
+      svg.appendChild(sep);
+    }
+    const lbl = document.createElementNS(ns,'text');
+    lbl.setAttribute('x',L-10); lbl.setAttribute('y',cy+4);
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','13');
+    lbl.setAttribute('font-weight','500'); lbl.setAttribute('fill','#202124');
+    lbl.textContent = d.label; svg.appendChild(lbl);
+    if (d.method === 'Thermal') {
+      const tag = document.createElementNS(ns,'text');
+      tag.setAttribute('x',L-10); tag.setAttribute('y',cy+16);
+      tag.setAttribute('text-anchor','end'); tag.setAttribute('font-size','9');
+      tag.setAttribute('fill','#BDC1C6'); tag.textContent = '(thermal)';
+      svg.appendChild(tag);
+    }
+    const stem = document.createElementNS(ns,'line');
+    stem.setAttribute('x1',x(0)); stem.setAttribute('x2',x(d.acresPerGwMi));
+    stem.setAttribute('y1',cy); stem.setAttribute('y2',cy);
+    stem.setAttribute('stroke','#EA4335'); stem.setAttribute('stroke-width','2');
+    stem.setAttribute('opacity','0.5');
+    svg.appendChild(stem);
+    const dot = document.createElementNS(ns,'circle');
+    dot.setAttribute('cx',x(d.acresPerGwMi)); dot.setAttribute('cy',cy);
+    dot.setAttribute('r','5'); dot.setAttribute('fill','#EA4335');
+    svg.appendChild(dot);
+    const val = document.createElementNS(ns,'text');
+    val.setAttribute('x',x(d.acresPerGwMi)+12); val.setAttribute('y',cy+4);
+    val.setAttribute('text-anchor','start'); val.setAttribute('font-size','12');
+    val.setAttribute('fill','#5F6368'); val.classList.add('mono');
+    val.textContent = d.acresPerGwMi.toFixed(1);
+    svg.appendChild(val);
+    if (i > 0) {
+      const ratio = baseAcres / d.acresPerGwMi;
+      const eff = document.createElementNS(ns,'text');
+      eff.setAttribute('x',x(d.acresPerGwMi)+50); eff.setAttribute('y',cy+4);
+      eff.setAttribute('text-anchor','start'); eff.setAttribute('font-size','11');
+      eff.setAttribute('fill','#9AA0A6');
+      eff.textContent = ratio.toFixed(1)+'\u00d7 more efficient';
+      svg.appendChild(eff);
+    }
+  });
+})();
+
+// 4. TOTAL ROW ACRES vs GW-MILES
+(function() {
+  const svg = document.getElementById('total-row-chart');
+  const W=780, H=360, L=90, R=150, T=30, B=50;
+  const pW=W-L-R, pH=H-T-B;
+  const ns = 'http://www.w3.org/2000/svg';
+  const maxAcres = Math.max(...DATA.map(d => d.totalAcres));
+  const maxGw = Math.max(...DATA.map(d => d.gw));
+  const rH = pH / DATA.length;
+  const barH = 14;
+  const y = i => T + i*rH + rH/2;
+  const barW = (pW - 60) / 2;
+  const midX = L + barW + 30;
+
+  const hAcres = document.createElementNS(ns,'text');
+  hAcres.setAttribute('x', L + barW/2); hAcres.setAttribute('y', T-10);
+  hAcres.setAttribute('text-anchor','middle'); hAcres.setAttribute('font-size','11');
+  hAcres.setAttribute('fill','#34A853'); hAcres.setAttribute('font-weight','600');
+  hAcres.textContent = 'Total ROW Acres'; svg.appendChild(hAcres);
+
+  const hGw = document.createElementNS(ns,'text');
+  hGw.setAttribute('x', midX + 30 + barW/2); hGw.setAttribute('y', T-10);
+  hGw.setAttribute('text-anchor','middle'); hGw.setAttribute('font-size','11');
+  hGw.setAttribute('fill','#EA4335'); hGw.setAttribute('font-weight','600');
+  hGw.textContent = 'GW-Miles'; svg.appendChild(hGw);
+
+  DATA.forEach((d,i) => {
+    const cy = y(i);
+    if (i > 0) {
+      const sep = document.createElementNS(ns,'line');
+      sep.setAttribute('x1', L); sep.setAttribute('x2', W-R);
+      sep.setAttribute('y1', T+i*rH); sep.setAttribute('y2', T+i*rH);
+      sep.setAttribute('stroke','#E8EAED'); sep.setAttribute('stroke-width','0.5');
+      svg.appendChild(sep);
+    }
+    const lbl = document.createElementNS(ns,'text');
+    lbl.setAttribute('x', L-10); lbl.setAttribute('y', cy+4);
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','13');
+    lbl.setAttribute('font-weight','500'); lbl.setAttribute('fill','#202124');
+    lbl.textContent = d.label; svg.appendChild(lbl);
+
+    const aBar = document.createElementNS(ns,'rect');
+    aBar.setAttribute('x', L); aBar.setAttribute('y', cy-barH/2);
+    aBar.setAttribute('width', d.totalAcres/maxAcres*barW);
+    aBar.setAttribute('height', barH); aBar.setAttribute('fill','#34A853');
+    aBar.setAttribute('opacity','0.65'); aBar.setAttribute('rx','1');
+    svg.appendChild(aBar);
+
+    const aVal = document.createElementNS(ns,'text');
+    aVal.setAttribute('x', L + d.totalAcres/maxAcres*barW + 6); aVal.setAttribute('y', cy+4);
+    aVal.setAttribute('text-anchor','start'); aVal.setAttribute('font-size','11');
+    aVal.setAttribute('fill','#34A853'); aVal.classList.add('mono');
+    const acresK = d.totalAcres >= 1000000 ? (d.totalAcres/1000000).toFixed(1)+'M'
+                 : Math.round(d.totalAcres/1000)+'K';
+    aVal.textContent = acresK + ' (' + d.pctAcres.toFixed(0) + '%)';
+    svg.appendChild(aVal);
+
+    const gBar = document.createElementNS(ns,'rect');
+    gBar.setAttribute('x', midX+30); gBar.setAttribute('y', cy-barH/2);
+    gBar.setAttribute('width', d.gw/maxGw*barW); gBar.setAttribute('height', barH);
+    gBar.setAttribute('fill','#EA4335'); gBar.setAttribute('opacity','0.7');
+    gBar.setAttribute('rx','1'); svg.appendChild(gBar);
+
+    const gVal = document.createElementNS(ns,'text');
+    gVal.setAttribute('x', midX+30 + d.gw/maxGw*barW + 6); gVal.setAttribute('y', cy+4);
+    gVal.setAttribute('text-anchor','start'); gVal.setAttribute('font-size','11');
+    gVal.setAttribute('fill','#EA4335'); gVal.classList.add('mono');
+    gVal.textContent = d.gw.toLocaleString() + ' (' + d.pctGw.toFixed(0) + '%)';
+    svg.appendChild(gVal);
+  });
+})();
+</script>
+</body>
+</html>

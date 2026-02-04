@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Macrogrid: Building America's Transmission Backbone</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=Product+Sans:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #fff;
+    color: #202124;
+    font-family: 'Google Sans', 'Product Sans', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 40px 80px;
+  }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* MACROGRID SECTION — Google Material aesthetic         */
+  /* ══════════════════════════════════════════════════════ */
+  .macrogrid {
+    --g-blue: #4285F4;
+    --g-red: #EA4335;
+    --g-yellow: #FBBC04;
+    --g-green: #34A853;
+    --g-grey: #5F6368;
+    --g-grey-light: #9AA0A6;
+    --g-grey-bg: #F8F9FA;
+    --g-grey-border: #DADCE0;
+    --g-grey-dark: #202124;
+    --g-surface: #FFFFFF;
+
+    background: var(--g-grey-bg);
+    padding: 0;
+    border-top: 4px solid var(--g-blue);
+  }
+
+  .macrogrid * { font-family: 'Google Sans', 'Product Sans', 'IBM Plex Sans', -apple-system, sans-serif; }
+
+  .mg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--g-blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    margin-bottom: 16px;
+  }
+  .mg-badge svg { width: 14px; height: 14px; fill: white; }
+
+  .mg-title {
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--g-grey-dark);
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .mg-title strong { font-weight: 600; }
+
+  .mg-subtitle {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--g-grey);
+    line-height: 1.6;
+    max-width: 680px;
+    margin-bottom: 40px;
+  }
+
+  /* ── Hero Cards ── */
+  .mg-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .mg-card {
+    background: var(--g-surface);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--g-grey-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+  }
+  .mg-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+  .mg-card-number {
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .mg-card-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey-light);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .mg-card-sub {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--g-grey-light);
+    margin-top: 4px;
+  }
+
+  /* ── Section labels ── */
+  .mg-section-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--g-grey-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+  .mg-section-title {
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--g-grey-dark);
+    margin-bottom: 6px;
+  }
+  .mg-section-title strong { font-weight: 600; }
+  .mg-section-sub {
+    font-size: 14px;
+    color: var(--g-grey);
+    margin-bottom: 32px;
+    line-height: 1.55;
+    max-width: 640px;
+  }
+  .mg-divider {
+    border: none;
+    border-top: 1px solid var(--g-grey-border);
+    margin: 48px 0;
+  }
+
+  /* ── Proposal rows ── */
+  .mg-proposal-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    height: 36px;
+  }
+  .mg-proposal-name {
+    width: 200px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--g-grey-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mg-proposal-region {
+    font-weight: 400;
+    color: var(--g-grey-light);
+    font-size: 11px;
+    display: block;
+  }
+  .mg-proposal-bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 24px;
+    gap: 0;
+  }
+  .mg-proposal-seg {
+    height: 24px;
+    min-width: 0;
+    border-radius: 0;
+    transition: opacity 0.15s;
+  }
+  .mg-proposal-seg:first-child { border-radius: 4px 0 0 4px; }
+  .mg-proposal-seg:last-of-type { border-radius: 0 4px 4px 0; }
+  .mg-proposal-seg:only-of-type { border-radius: 4px; }
+  .mg-proposal-val {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey);
+    white-space: nowrap;
+    margin-left: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mg-proposal-cost {
+    width: 72px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 11px;
+    color: var(--g-grey-light);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Legend pills ── */
+  .mg-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .mg-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey);
+  }
+  .mg-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* ── Expansion comparison ── */
+  .mg-expand-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .mg-expand-label {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--g-grey-dark);
+  }
+  .mg-expand-label small {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--g-grey-light);
+  }
+  .mg-expand-bars {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    height: 32px;
+  }
+  .mg-expand-existing {
+    height: 32px;
+    border-radius: 6px 0 0 6px;
+    opacity: 0.3;
+  }
+  .mg-expand-new {
+    height: 32px;
+    border-radius: 0 6px 6px 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(255,255,255,0.3) 3px,
+      rgba(255,255,255,0.3) 6px
+    );
+  }
+  .mg-expand-val {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey);
+    white-space: nowrap;
+    margin-left: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Build rate ── */
+  .mg-rate-wrap {
+    display: flex;
+    gap: 32px;
+    margin-top: 32px;
+  }
+  .mg-rate-card {
+    flex: 1;
+    background: var(--g-surface);
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid var(--g-grey-border);
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .mg-rate-number {
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+  .mg-rate-unit {
+    font-size: 13px;
+    color: var(--g-grey-light);
+    margin-bottom: 2px;
+  }
+  .mg-rate-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .mg-rate-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--g-grey-bg);
+    border-radius: 3px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  .mg-rate-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* ── ROW impact ── */
+  .mg-row-impact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .mg-row-card {
+    background: var(--g-surface);
+    border-radius: 12px;
+    padding: 24px 28px;
+    border: 1px solid var(--g-grey-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .mg-row-card-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey-light);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+  .mg-row-big {
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--g-grey-dark);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .mg-row-detail {
+    font-size: 13px;
+    color: var(--g-grey);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* ── Interactive controls ── */
+  .mg-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 28px;
+  }
+  .mg-control-panel {
+    background: var(--g-surface);
+    border: 1px solid var(--g-grey-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .mg-control-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--g-grey-dark);
+    margin-bottom: 18px;
+  }
+  .mg-control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .mg-control-row label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--g-grey);
+    width: 76px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .mg-control-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: #DADCE0;
+    border-radius: 2px;
+    outline: none;
+  }
+  .mg-control-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--g-blue);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(66,133,244,0.4);
+    transition: box-shadow 0.15s ease;
+  }
+  .mg-control-row input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 1px 6px rgba(66,133,244,0.6);
+  }
+  .mg-control-val {
+    font-size: 11px;
+    color: var(--g-grey);
+    min-width: 130px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mg-toggle-group {
+    display: flex;
+    border: 1px solid var(--g-grey-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .mg-toggle {
+    padding: 5px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    border: none;
+    background: var(--g-surface);
+    color: var(--g-grey);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .mg-toggle:first-child { border-right: 1px solid var(--g-grey-border); }
+  .mg-toggle.active {
+    background: var(--g-blue);
+    color: white;
+  }
+  .mg-toggle:hover:not(.active) { background: #F1F3F4; }
+  .mg-control-result {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--g-grey-border);
+    font-size: 12px;
+    color: var(--g-grey);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .mg-result-big {
+    font-size: 22px;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── DOE reference box ── */
+  .mg-doe-box {
+    background: #F8F9FA;
+    border: 1px solid var(--g-grey-border);
+    border-left: 4px solid var(--g-blue);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-top: 32px;
+  }
+  .mg-doe-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--g-grey-dark);
+    margin-bottom: 16px;
+    letter-spacing: 0.01em;
+  }
+  .mg-doe-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .mg-doe-num {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--g-blue);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .mg-doe-unit {
+    font-size: 11px;
+    color: var(--g-grey);
+    margin-top: 4px;
+  }
+  .mg-doe-note {
+    font-size: 11px;
+    color: var(--g-grey-light);
+    margin-top: 16px;
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  /* ── Source ── */
+  .mg-source {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--g-grey-light);
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--g-grey-border);
+    line-height: 1.65;
+  }
+
+  .macrogrid svg text {
+    font-family: 'Google Sans', 'Product Sans', 'IBM Plex Sans', -apple-system, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<div style="margin-bottom:24px;font-size:13px;color:#5F6368"><a href="analysis.html" style="color:#4285F4;text-decoration:none">&larr; Grid Analysis</a> &nbsp;|&nbsp; <a href="map.html" style="color:#4285F4;text-decoration:none">Map</a></div>
+
+<section class="macrogrid">
+
+  <div class="mg-badge">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    What comes next
+  </div>
+
+  <h2 class="mg-title">The <strong>Macrogrid</strong>: Building America's transmission backbone</h2>
+  <p class="mg-subtitle">
+    Five ISOs have simultaneously approved the largest transmission expansion in U.S. history.
+    Combined with six major HVDC projects, the planned buildout would add 12,700 miles of
+    high-voltage line&mdash;a 13% expansion of the 345&thinsp;kV+ network&mdash;at a cost
+    exceeding $100 billion.
+  </p>
+
+  <!-- Hero Cards -->
+  <div class="mg-cards">
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-blue)">12,700</div>
+      <div class="mg-card-label">New line-miles</div>
+      <div class="mg-card-sub">345 kV and above</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-red)">5,600</div>
+      <div class="mg-card-label">Miles at 765 kV</div>
+      <div class="mg-card-sub">First new 765 kV in 40 years</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-green)">2,800</div>
+      <div class="mg-card-label">Miles of HVDC</div>
+      <div class="mg-card-sub">6 interregional projects</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-yellow)">$107B</div>
+      <div class="mg-card-label">Total investment</div>
+      <div class="mg-card-sub">Board-approved plans</div>
+    </div>
+  </div>
+
+  <!-- ── Proposals Breakdown ── -->
+  <div class="mg-section-label">Approved plans by ISO and project</div>
+
+  <div class="mg-legend">
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:var(--g-yellow)"></div> 345 kV</div>
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:var(--g-blue)"></div> 500 kV</div>
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:var(--g-red)"></div> 765 kV</div>
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:var(--g-green)"></div> HVDC</div>
+  </div>
+
+  <div id="mg-proposals"></div>
+
+  <!-- ── Grid Expansion ── -->
+  <hr class="mg-divider">
+  <h3 class="mg-section-title">How much the grid <strong>grows</strong></h3>
+  <p class="mg-section-sub">
+    The existing high-voltage grid (345&thinsp;kV+) spans 98,000 miles. Approved plans add 12,700 miles&mdash;a 13%
+    increase. But 765&thinsp;kV, which currently has only 2,410 miles, would more than triple to 8,000 miles.
+    HVDC would nearly double from 1,573 to 4,340 miles.
+  </p>
+
+  <div class="mg-legend" style="margin-bottom:20px">
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:var(--g-grey);opacity:0.3"></div> Existing</div>
+    <div class="mg-legend-item"><div class="mg-legend-dot" style="background:currentColor;background:repeating-linear-gradient(-45deg,var(--g-blue),var(--g-blue) 2px,rgba(66,133,244,0.4) 2px,rgba(66,133,244,0.4) 4px)"></div> New (approved)</div>
+  </div>
+
+  <div id="mg-expansion"></div>
+
+  <!-- ── Right-of-Way: The Full Picture ── -->
+  <hr class="mg-divider">
+  <h3 class="mg-section-title">The <strong>land</strong> question: how much ROW does America need?</h3>
+  <p class="mg-section-sub">
+    Today&rsquo;s grid occupies 6.0 million acres of right-of-way&mdash;roughly the size of New Hampshire.
+    Approved ISO plans add just 320,000 acres, a 5% increase. But the DOE&rsquo;s National Transmission
+    Planning Study (October 2024) envisions 2.4&times; to 3.5&times; today&rsquo;s capacity by 2050.
+    That means millions of additional acres of new corridors. The DOE study doesn&rsquo;t estimate
+    land use&mdash;we do.
+  </p>
+
+  <div class="mg-cards">
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-grey)">6.0M</div>
+      <div class="mg-card-label">Existing ROW</div>
+      <div class="mg-card-sub">422K miles, all voltages</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-blue)">+320K</div>
+      <div class="mg-card-label">Approved plans</div>
+      <div class="mg-card-sub">+5.3% of existing ROW</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-yellow)" id="hero-ac-acres">+2.1M</div>
+      <div class="mg-card-label">DOE AC scenario</div>
+      <div class="mg-card-sub" id="hero-ac-sub">2.4&times; capacity &mdash; all 765 kV</div>
+    </div>
+    <div class="mg-card">
+      <div class="mg-card-number" style="color:var(--g-green)" id="hero-dc-acres">+1.9M</div>
+      <div class="mg-card-label">DOE MT-HVDC</div>
+      <div class="mg-card-sub" id="hero-dc-sub">3.5&times; capacity &mdash; all HVDC</div>
+    </div>
+  </div>
+
+  <div class="mg-section-label">Adjust backbone technology assumptions</div>
+
+  <div class="mg-controls">
+    <div class="mg-control-panel" style="border-left: 3px solid var(--g-yellow)">
+      <div class="mg-control-title">765 kV AC Backbone</div>
+      <div class="mg-control-row">
+        <label>Conductor</label>
+        <input type="range" min="1" max="2.5" step="0.25" value="1" id="ac-conductor">
+        <span class="mg-control-val" id="ac-conductor-val">1.0&times; &mdash; 1,951 MW</span>
+      </div>
+      <div class="mg-control-row">
+        <label>Circuit</label>
+        <div class="mg-toggle-group">
+          <button class="mg-toggle active" id="ac-single">Single</button>
+          <button class="mg-toggle" id="ac-double">Double</button>
+        </div>
+      </div>
+      <div class="mg-control-result">
+        <span><span class="mg-result-big" id="ac-eff-cap" style="color:var(--g-yellow)">1,951</span> MW/corridor</span>
+        <span><span class="mg-result-big" id="ac-result-acres" style="color:var(--g-yellow)">2.1M</span> new acres</span>
+      </div>
+    </div>
+    <div class="mg-control-panel" style="border-left: 3px solid var(--g-green)">
+      <div class="mg-control-title">HVDC Backbone</div>
+      <div class="mg-control-row">
+        <label>DC voltage</label>
+        <input type="range" min="500" max="1100" step="100" value="500" id="dc-voltage">
+        <span class="mg-control-val" id="dc-voltage-val">&plusmn;500 kV &mdash; 3,000 MW</span>
+      </div>
+      <div class="mg-control-row">
+        <label>Bipole</label>
+        <div class="mg-toggle-group">
+          <button class="mg-toggle active" id="dc-single">Single</button>
+          <button class="mg-toggle" id="dc-double">Double</button>
+        </div>
+      </div>
+      <div class="mg-control-result">
+        <span><span class="mg-result-big" id="dc-eff-cap" style="color:var(--g-green)">3,000</span> MW/corridor</span>
+        <span><span class="mg-result-big" id="dc-result-acres" style="color:var(--g-green)">1.9M</span> new acres</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mg-section-label" style="margin-top:28px">Total U.S. transmission right-of-way by scenario</div>
+  <svg id="mg-row-chart" width="780" height="340" style="margin-top:8px"></svg>
+
+  <!-- DOE NTP Study Reference -->
+  <div class="mg-doe-box">
+    <div class="mg-doe-title">DOE National Transmission Planning Study &mdash; Executive Summary (October 2024)</div>
+    <div class="mg-doe-grid">
+      <div>
+        <div class="mg-doe-num">147</div>
+        <div class="mg-doe-unit">TW-miles today (2020)</div>
+      </div>
+      <div>
+        <div class="mg-doe-num">351</div>
+        <div class="mg-doe-unit">TW-mi &mdash; AC scenario</div>
+      </div>
+      <div>
+        <div class="mg-doe-num">512</div>
+        <div class="mg-doe-unit">TW-mi &mdash; MT-HVDC</div>
+      </div>
+      <div>
+        <div class="mg-doe-num" style="font-size:20px">$270&ndash;490B</div>
+        <div class="mg-doe-unit">consumer savings through 2050</div>
+      </div>
+    </div>
+    <div class="mg-doe-note">
+      The DOE measures grid capacity in terawatt-miles but does not estimate right-of-way or land use.
+      ROW estimates above translate DOE capacity expansion ratios into acres using HIFLD-derived
+      ROW widths: AC scenario assumes 100% 765&thinsp;kV (275&thinsp;ft ROW, 17.1&thinsp;ac/GW-mi),
+      MT-HVDC assumes 100% HVDC (150&thinsp;ft ROW, 8.6&thinsp;ac/GW-mi).
+      Benefit-to-cost ratio: 1.6&ndash;1.8&times;. Seam-crossing capacity expands from ~2&thinsp;GW today
+      to 40+&thinsp;GW under MT-HVDC.
+    </div>
+  </div>
+
+  <!-- Source -->
+  <div class="mg-source">
+    Approved plans: MISO LRTP Tranche 1 &amp; 2.1, ERCOT 765&thinsp;kV STEP, PJM RTEP 2024,
+    SPP 2025 ITP, MISO-SPP JTIQ. HVDC projects: SunZia, TransWest Express, CHPE,
+    Grain Belt Express, SOO Green, Southern Spirit.
+    DOE scenarios: National Transmission Planning Study Executive Summary (Oct 2024),
+    Figures ES-3 through ES-5. ROW widths: EPRI, FERC siting guidelines.
+    Existing ROW: HIFLD transmission lines (52,244 features).
+    Capacity: SIL (AC), thermal (HVDC). DOE uses thermal ratings for all lines.
+    <br>See also: <a href="analysis.html" style="color:var(--g-blue)">Grid analysis</a> | <a href="map.html" style="color:var(--g-blue)">Interactive map</a>.
+  </div>
+
+</section>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// 7. MACROGRID — PROPOSALS CHART
+// ═══════════════════════════════════════════
+(function() {
+  const PROPOSALS = [
+    { name:"MISO Tranche 1",      region:"Midwest",       kv345:2000, kv500:0,  kv765:0,    hvdc:0,   cost:10.3 },
+    { name:"MISO Tranche 2.1",    region:"Midwest",       kv345:1831, kv500:0,  kv765:1800, hvdc:0,   cost:21.8 },
+    { name:"ERCOT 765kV STEP",    region:"Texas",         kv345:0,    kv500:0,  kv765:2468, hvdc:0,   cost:33.0 },
+    { name:"PJM RTEP 2024",       region:"Mid-Atlantic",  kv345:0,    kv500:71, kv765:416,  hvdc:0,   cost:6.7  },
+    { name:"SPP 2025 ITP",        region:"Central",       kv345:62,   kv500:0,  kv765:949,  hvdc:0,   cost:8.6  },
+    { name:"MISO-SPP JTIQ",       region:"Seam",          kv345:300,  kv500:0,  kv765:0,    hvdc:0,   cost:1.9  },
+    { name:"Grain Belt Express",  region:"KS→IN",         kv345:0,    kv500:0,  kv765:0,    hvdc:800, cost:7.0  },
+    { name:"SunZia",              region:"NM→AZ",         kv345:0,    kv500:0,  kv765:0,    hvdc:553, cost:11.0 },
+    { name:"TransWest Express",   region:"WY→NV",         kv345:327,  kv500:0,  kv765:0,    hvdc:405, cost:3.0  },
+    { name:"SOO Green",           region:"IA→IL",         kv345:0,    kv500:0,  kv765:0,    hvdc:350, cost:4.0  },
+    { name:"CHPE",                region:"QC→NYC",        kv345:0,    kv500:0,  kv765:0,    hvdc:339, cost:6.0  },
+    { name:"Southern Spirit",     region:"TX→MS",         kv345:0,    kv500:0,  kv765:0,    hvdc:320, cost:null },
+  ];
+
+  const colors = { kv345:'#FBBC04', kv500:'#4285F4', kv765:'#EA4335', hvdc:'#34A853' };
+  const el = document.getElementById('mg-proposals');
+  const maxMi = Math.max(...PROPOSALS.map(p => p.kv345+p.kv500+p.kv765+p.hvdc));
+  const barScale = 420;
+
+  PROPOSALS.forEach(p => {
+    const total = p.kv345 + p.kv500 + p.kv765 + p.hvdc;
+    const row = document.createElement('div');
+    row.className = 'mg-proposal-row';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'mg-proposal-name';
+    nameDiv.innerHTML = `${p.name}<span class="mg-proposal-region">${p.region}</span>`;
+
+    const barWrap = document.createElement('div');
+    barWrap.className = 'mg-proposal-bar-wrap';
+
+    const segs = [
+      { val: p.kv345, color: colors.kv345 },
+      { val: p.kv500, color: colors.kv500 },
+      { val: p.kv765, color: colors.kv765 },
+      { val: p.hvdc,  color: colors.hvdc  },
+    ];
+    segs.forEach(s => {
+      if (s.val <= 0) return;
+      const seg = document.createElement('div');
+      seg.className = 'mg-proposal-seg';
+      seg.style.width = (s.val / maxMi * barScale) + 'px';
+      seg.style.background = s.color;
+      barWrap.appendChild(seg);
+    });
+
+    const val = document.createElement('span');
+    val.className = 'mg-proposal-val';
+    val.textContent = total.toLocaleString() + ' mi';
+
+    const costDiv = document.createElement('span');
+    costDiv.className = 'mg-proposal-cost';
+    costDiv.textContent = p.cost ? '$' + p.cost + 'B' : '—';
+
+    row.append(nameDiv, barWrap, val, costDiv);
+    el.appendChild(row);
+  });
+})();
+
+// ═══════════════════════════════════════════
+// 8. MACROGRID — GRID EXPANSION
+// ═══════════════════════════════════════════
+(function() {
+  const EXPAND = [
+    { label:'345 kV',  existing:65508, added:4220,  color:'#FBBC04' },
+    { label:'500 kV',  existing:28534, added:71,    color:'#4285F4' },
+    { label:'765 kV',  existing:2410,  added:5633,  color:'#EA4335' },
+    { label:'HVDC',    existing:1573,  added:2767,  color:'#34A853' },
+  ];
+
+  const el = document.getElementById('mg-expansion');
+  const maxTotal = Math.max(...EXPAND.map(d => d.existing + d.added));
+  const barScale = 480;
+
+  EXPAND.forEach(d => {
+    const total = d.existing + d.added;
+    const pctGrowth = (d.added / d.existing * 100).toFixed(0);
+    const row = document.createElement('div');
+    row.className = 'mg-expand-row';
+
+    const label = document.createElement('div');
+    label.className = 'mg-expand-label';
+    label.innerHTML = `${d.label}<small>+${pctGrowth}%</small>`;
+
+    const bars = document.createElement('div');
+    bars.className = 'mg-expand-bars';
+
+    const existBar = document.createElement('div');
+    existBar.className = 'mg-expand-existing';
+    existBar.style.width = (d.existing / maxTotal * barScale) + 'px';
+    existBar.style.background = d.color;
+
+    const newBar = document.createElement('div');
+    newBar.className = 'mg-expand-new';
+    newBar.style.width = (d.added / maxTotal * barScale) + 'px';
+    newBar.style.background = d.color;
+
+    const val = document.createElement('span');
+    val.className = 'mg-expand-val';
+    val.textContent = d.existing.toLocaleString() + ' + ' + d.added.toLocaleString() + ' = ' + total.toLocaleString() + ' mi';
+
+    bars.append(existBar, newBar);
+    row.append(label, bars, val);
+    el.appendChild(row);
+  });
+})();
+
+// ═══════════════════════════════════════════
+// 9. MACROGRID — INTERACTIVE ROW COMPARISON
+// ═══════════════════════════════════════════
+(function() {
+  const EXISTING_ACRES = 6048000;
+  const APPROVED_ACRES = 320000;
+  const AC_NEW_GW_MI  = 121000;  // (351−147)/1.69 TW-mi → GW-mi SIL basis
+  const DC_NEW_GW_MI  = 216000;  // (512−147)/1.69
+  const AC_BASE_MW    = 1951;    // 765 kV SIL
+  const AC_ROW_FT     = 275;     // 765 kV standard ROW
+
+  // HVDC capacity scales with voltage: calibrated to known projects
+  // ±500 kV → 3,000 MW, ±800 kV → ~6,400 MW, ±1100 kV → ~12,000 MW
+  function hvdcCapacity(voltage) {
+    return 3000 * Math.pow(voltage / 500, 1.7);
+  }
+  // HVDC ROW widens slightly with voltage
+  function hvdcRowFt(voltage) {
+    return 150 + (voltage - 500) / 600 * 50;
+  }
+  // Acres of ROW per GW-mile
+  function acresPerGwMi(rowFt, capacityMw) {
+    return (rowFt * 5280 / 43560) / (capacityMw / 1000);
+  }
+
+  // ── State ──
+  let acConductor = 1.0;
+  let acDouble = false;
+  let dcVoltage = 500;
+  let dcDouble = false;
+
+  function calculate() {
+    const acEffMw    = AC_BASE_MW * acConductor * (acDouble ? 2 : 1);
+    const acApGm     = acresPerGwMi(AC_ROW_FT, acEffMw);
+    const acNewAcres = AC_NEW_GW_MI * acApGm;
+
+    const dcBaseMw   = hvdcCapacity(dcVoltage);
+    const dcEffMw    = dcBaseMw * (dcDouble ? 2 : 1);
+    const dcRow      = hvdcRowFt(dcVoltage);
+    const dcApGm     = acresPerGwMi(dcRow, dcEffMw);
+    const dcNewAcres = DC_NEW_GW_MI * dcApGm;
+
+    return { acEffMw, acNewAcres, dcBaseMw, dcEffMw, dcRow, dcNewAcres };
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString(); }
+  function fmtM(n) { return (n/1000000).toFixed(1) + 'M'; }
+
+  function render() {
+    const { acEffMw, acNewAcres, dcBaseMw, dcEffMw, dcRow, dcNewAcres } = calculate();
+
+    // ── Update control panel displays ──
+    document.getElementById('ac-conductor-val').textContent =
+      acConductor.toFixed(2).replace(/0$/,'') + '\u00d7 \u2014 ' + fmt(AC_BASE_MW * acConductor) + ' MW';
+    document.getElementById('ac-eff-cap').textContent = fmt(acEffMw);
+    document.getElementById('ac-result-acres').textContent = fmtM(acNewAcres);
+
+    document.getElementById('dc-voltage-val').textContent =
+      '\u00b1' + dcVoltage + ' kV \u2014 ' + fmt(dcBaseMw) + ' MW';
+    document.getElementById('dc-eff-cap').textContent = fmt(dcEffMw);
+    document.getElementById('dc-result-acres').textContent = fmtM(dcNewAcres);
+
+    // ── Update hero cards ──
+    document.getElementById('hero-ac-acres').textContent = '+' + fmtM(acNewAcres);
+    document.getElementById('hero-dc-acres').textContent = '+' + fmtM(dcNewAcres);
+
+    const acDesc = '2.4\u00d7 cap \u2014 765 kV' +
+      (acConductor > 1 ? ' (' + acConductor.toFixed(2).replace(/0$/,'') + '\u00d7 cond)' : '') +
+      (acDouble ? ' dbl circuit' : '');
+    const dcDesc = '3.5\u00d7 cap \u2014 \u00b1' + dcVoltage + ' kV' +
+      (dcDouble ? ' dbl bipole' : '');
+    document.getElementById('hero-ac-sub').textContent = acDesc;
+    document.getElementById('hero-dc-sub').textContent = dcDesc;
+
+    // ── Rebuild SVG ──
+    const svg = document.getElementById('mg-row-chart');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const W=780, H=340, L=140, R=160, T=30, B=30;
+    const pW=W-L-R, pH=H-T-B;
+    const ns = 'http://www.w3.org/2000/svg';
+
+    const SCENARIOS = [
+      { label:'Today',            total:EXISTING_ACRES,                          added:0,              color:'#5F6368', note:'422K miles, all voltages' },
+      { label:'+ Approved plans', total:EXISTING_ACRES + APPROVED_ACRES,         added:APPROVED_ACRES, color:'#4285F4', note:'+12,700 mi at 345 kV+' },
+      { label:'DOE AC scenario',  total:EXISTING_ACRES + Math.round(acNewAcres), added:Math.round(acNewAcres), color:'#FBBC04', note:acDesc },
+      { label:'DOE MT-HVDC',      total:EXISTING_ACRES + Math.round(dcNewAcres), added:Math.round(dcNewAcres), color:'#34A853', note:dcDesc },
+    ];
+
+    const maxAcres = Math.max(...SCENARIOS.map(s => s.total), EXISTING_ACRES * 1.05);
+    const rH = pH / SCENARIOS.length;
+    const barH = 36;
+    const y = i => T + i*rH + rH/2;
+    const x = v => L + (v / (maxAcres * 1.08)) * pW;
+
+    // Dynamic grid lines
+    const step = maxAcres > 10000000 ? 2000000 : 1000000;
+    for (let v = 0; v <= maxAcres * 1.08; v += step) {
+      const line = document.createElementNS(ns,'line');
+      line.setAttribute('x1',x(v)); line.setAttribute('x2',x(v));
+      line.setAttribute('y1',T-4); line.setAttribute('y2',T+pH);
+      line.setAttribute('stroke', v===0 ? '#9AA0A6' : '#E8EAED');
+      line.setAttribute('stroke-width', v===0 ? '1' : '0.5');
+      svg.appendChild(line);
+      const t = document.createElementNS(ns,'text');
+      t.setAttribute('x',x(v)); t.setAttribute('y',T+pH+18);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','11');
+      t.setAttribute('fill','#9AA0A6');
+      t.textContent = (v/1000000).toFixed(0) + 'M';
+      svg.appendChild(t);
+    }
+    const axLbl = document.createElementNS(ns,'text');
+    axLbl.setAttribute('x', L + pW/2); axLbl.setAttribute('y', T+pH+34);
+    axLbl.setAttribute('text-anchor','middle'); axLbl.setAttribute('font-size','11');
+    axLbl.setAttribute('fill','#9AA0A6'); axLbl.textContent = 'Total right-of-way (acres)';
+    svg.appendChild(axLbl);
+
+    // Existing grid reference line
+    const refX = x(EXISTING_ACRES);
+    const refLine = document.createElementNS(ns,'line');
+    refLine.setAttribute('x1',refX); refLine.setAttribute('x2',refX);
+    refLine.setAttribute('y1',T-8); refLine.setAttribute('y2',T+pH+2);
+    refLine.setAttribute('stroke','#5F6368'); refLine.setAttribute('stroke-width','1.5');
+    refLine.setAttribute('stroke-dasharray','4,3'); refLine.setAttribute('opacity','0.4');
+    svg.appendChild(refLine);
+    const refLbl = document.createElementNS(ns,'text');
+    refLbl.setAttribute('x',refX); refLbl.setAttribute('y',T-14);
+    refLbl.setAttribute('text-anchor','middle'); refLbl.setAttribute('font-size','10');
+    refLbl.setAttribute('fill','#5F6368'); refLbl.setAttribute('font-weight','500');
+    refLbl.textContent = 'existing 6.0M'; svg.appendChild(refLbl);
+
+    SCENARIOS.forEach((s,i) => {
+      const cy = y(i);
+
+      if (i > 0) {
+        const sep = document.createElementNS(ns,'line');
+        sep.setAttribute('x1',L-10); sep.setAttribute('x2',W-R);
+        sep.setAttribute('y1',T+i*rH); sep.setAttribute('y2',T+i*rH);
+        sep.setAttribute('stroke','#E8EAED'); sep.setAttribute('stroke-width','0.5');
+        svg.appendChild(sep);
+      }
+
+      // Label
+      const lbl = document.createElementNS(ns,'text');
+      lbl.setAttribute('x',L-12); lbl.setAttribute('y',cy-3);
+      lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','13');
+      lbl.setAttribute('font-weight','500'); lbl.setAttribute('fill','#202124');
+      lbl.textContent = s.label; svg.appendChild(lbl);
+
+      const sub = document.createElementNS(ns,'text');
+      sub.setAttribute('x',L-12); sub.setAttribute('y',cy+12);
+      sub.setAttribute('text-anchor','end'); sub.setAttribute('font-size','10');
+      sub.setAttribute('fill','#9AA0A6');
+      sub.textContent = s.note; svg.appendChild(sub);
+
+      if (i === 0) {
+        const bar = document.createElementNS(ns,'rect');
+        bar.setAttribute('x',x(0)); bar.setAttribute('y',cy-barH/2);
+        bar.setAttribute('width', x(s.total)-x(0));
+        bar.setAttribute('height',barH); bar.setAttribute('rx','4');
+        bar.setAttribute('fill',s.color); bar.setAttribute('opacity','0.3');
+        svg.appendChild(bar);
+      } else {
+        // Existing portion (grey)
+        const existBar = document.createElementNS(ns,'rect');
+        existBar.setAttribute('x',x(0)); existBar.setAttribute('y',cy-barH/2);
+        existBar.setAttribute('width', x(EXISTING_ACRES)-x(0));
+        existBar.setAttribute('height',barH); existBar.setAttribute('rx','4');
+        existBar.setAttribute('fill','#5F6368'); existBar.setAttribute('opacity','0.15');
+        svg.appendChild(existBar);
+
+        // New addition (colored)
+        const addedW = x(s.total) - x(EXISTING_ACRES);
+        if (addedW > 1) {
+          const newBar = document.createElementNS(ns,'rect');
+          newBar.setAttribute('x', x(EXISTING_ACRES));
+          newBar.setAttribute('y', cy-barH/2);
+          newBar.setAttribute('width', addedW);
+          newBar.setAttribute('height',barH);
+          newBar.setAttribute('fill',s.color); newBar.setAttribute('opacity','0.7');
+          newBar.setAttribute('rx','2');
+          svg.appendChild(newBar);
+        }
+      }
+
+      // Value label
+      const val = document.createElementNS(ns,'text');
+      val.setAttribute('x', x(s.total)+8); val.setAttribute('y', cy+5);
+      val.setAttribute('text-anchor','start'); val.setAttribute('font-size','12');
+      val.setAttribute('font-weight','500');
+      val.setAttribute('fill', i===0 ? '#5F6368' : s.color);
+      const acresStr = fmtM(s.total);
+      const pctStr = s.added > 0 ? ' (+' + Math.round(s.added/EXISTING_ACRES*100) + '%)' : '';
+      val.textContent = acresStr + ' acres' + pctStr;
+      svg.appendChild(val);
+    });
+  }
+
+  // ── Event listeners ──
+  document.getElementById('ac-conductor').addEventListener('input', e => {
+    acConductor = parseFloat(e.target.value);
+    render();
+  });
+  document.getElementById('ac-single').addEventListener('click', () => {
+    acDouble = false;
+    document.getElementById('ac-single').classList.add('active');
+    document.getElementById('ac-double').classList.remove('active');
+    render();
+  });
+  document.getElementById('ac-double').addEventListener('click', () => {
+    acDouble = true;
+    document.getElementById('ac-double').classList.add('active');
+    document.getElementById('ac-single').classList.remove('active');
+    render();
+  });
+  document.getElementById('dc-voltage').addEventListener('input', e => {
+    dcVoltage = parseInt(e.target.value);
+    render();
+  });
+  document.getElementById('dc-single').addEventListener('click', () => {
+    dcDouble = false;
+    document.getElementById('dc-single').classList.add('active');
+    document.getElementById('dc-double').classList.remove('active');
+    render();
+  });
+  document.getElementById('dc-double').addEventListener('click', () => {
+    dcDouble = true;
+    document.getElementById('dc-double').classList.add('active');
+    document.getElementById('dc-single').classList.remove('active');
+    render();
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+</body>
+</html>

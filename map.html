@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Transmission Grid</title>
+<script src="https://unpkg.com/deck.gl@9.1.4/dist.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0c10;
+    --panel: rgba(10, 12, 16, 0.92);
+    --border: rgba(255, 255, 255, 0.06);
+    --text: #c8ccd4;
+    --text-dim: #5a6070;
+    --text-bright: #e8ecf4;
+    --accent: #ff6b35;
+
+    --v100: #1a5276;
+    --v220: #2e86c1;
+    --v345: #f39c12;
+    --v500: #e74c3c;
+    --v735: #ff44cc;
+    --vdc: #00ffaa;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #map-container {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* ── Loading Screen ── */
+  #loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loading-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  .loading-bar-track {
+    width: 280px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .loading-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .loading-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* ── Header ── */
+  #header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 20px 28px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(10,12,16,0.7) 0%, transparent 100%);
+  }
+  .header-left {
+    pointer-events: auto;
+  }
+  .header-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+  }
+  .header-nav {
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .header-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .header-nav a:hover { opacity: 1; }
+  .header-nav .sep { color: var(--text-dim); margin: 0 6px; }
+
+  /* ── Stats Bar ── */
+  #stats-bar {
+    position: fixed;
+    top: 20px;
+    right: 28px;
+    z-index: 100;
+    display: flex;
+    gap: 2px;
+    pointer-events: auto;
+  }
+  .stat-cell {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 90px;
+  }
+  .stat-cell:first-child { border-radius: 6px 0 0 6px; }
+  .stat-cell:last-child { border-radius: 0 6px 6px 0; }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── Legend ── */
+  #legend {
+    position: fixed;
+    bottom: 28px;
+    left: 28px;
+    z-index: 100;
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    pointer-events: auto;
+  }
+  .legend-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 2px 0;
+    transition: opacity 0.2s;
+  }
+  .legend-item:hover { opacity: 0.8; }
+  .legend-item.disabled { opacity: 0.25; }
+  .legend-line {
+    flex-shrink: 0;
+    border-radius: 1px;
+  }
+  .legend-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .legend-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: auto;
+    padding-left: 12px;
+  }
+
+  /* ── Filter Panel ── */
+  #filter-panel {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 100;
+    display: flex;
+    gap: 2px;
+    pointer-events: auto;
+  }
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:first-child { border-radius: 6px 0 0 6px; }
+  .filter-btn:last-child { border-radius: 0 6px 6px 0; }
+  .filter-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.12); }
+  .filter-btn.active {
+    color: var(--text-bright);
+    background: rgba(255, 107, 53, 0.12);
+    border-color: rgba(255, 107, 53, 0.3);
+  }
+
+  /* ── Tooltip ── */
+  #tooltip {
+    position: fixed;
+    z-index: 200;
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 320px;
+  }
+  #tooltip.visible { opacity: 1; }
+  .tooltip-voltage {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .tooltip-class {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .tooltip-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+  .tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 3px;
+  }
+  .tooltip-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .tooltip-val {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Maplibre overrides ── */
+  .maplibregl-ctrl-attrib { display: none !important; }
+  .maplibregl-ctrl-group {
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    overflow: hidden;
+  }
+  .maplibregl-ctrl-group button {
+    background: transparent !important;
+    border-color: var(--border) !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .maplibregl-ctrl-group button span {
+    filter: invert(0.7);
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-overlay">
+  <div class="loading-title">Loading Transmission Grid</div>
+  <div class="loading-bar-track"><div class="loading-bar-fill" id="loading-bar"></div></div>
+  <div class="loading-status" id="loading-status">Initializing...</div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div class="header-left">
+    <div class="header-title">U.S. Transmission Grid</div>
+    <div class="header-sub">52,244 lines &middot; HIFLD / EIA &middot; 69 kV&ndash;1,000 kV</div>
+    <div class="header-nav"><a href="analysis.html">← Analysis</a><span class="sep">|</span><a href="macrogrid.html">Macrogrid →</a></div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div id="stats-bar">
+  <div class="stat-cell">
+    <div class="stat-value" id="stat-visible">--</div>
+    <div class="stat-label">Visible</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-value" id="stat-miles">--</div>
+    <div class="stat-label">Miles</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-value" id="stat-owners">--</div>
+    <div class="stat-label">Owners</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+  <div class="legend-header">Voltage Class (kV)</div>
+  <div class="legend-items" id="legend-items"></div>
+</div>
+
+<!-- Filters -->
+<div id="filter-panel">
+  <button class="filter-btn active" data-status="all" onclick="toggleStatus(this)">All</button>
+  <button class="filter-btn" data-status="IN SERVICE" onclick="toggleStatus(this)">In Service</button>
+  <button class="filter-btn" data-status="NOT AVAILABLE" onclick="toggleStatus(this)">Unverified</button>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip">
+  <div class="tooltip-voltage" id="tt-voltage"></div>
+  <div class="tooltip-class" id="tt-class"></div>
+  <div class="tooltip-divider"></div>
+  <div class="tooltip-row"><span class="tooltip-key">Owner</span><span class="tooltip-val" id="tt-owner"></span></div>
+  <div class="tooltip-row"><span class="tooltip-key">Type</span><span class="tooltip-val" id="tt-type"></span></div>
+  <div class="tooltip-row"><span class="tooltip-key">Status</span><span class="tooltip-val" id="tt-status"></span></div>
+  <div class="tooltip-row"><span class="tooltip-key">From</span><span class="tooltip-val" id="tt-sub1"></span></div>
+  <div class="tooltip-row"><span class="tooltip-key">To</span><span class="tooltip-val" id="tt-sub2"></span></div>
+</div>
+
+<!-- Map Container -->
+<div id="map-container"></div>
+
+<script>
+// ── Config ──
+const VOLT_CONFIG = {
+  '100-161':      { color: [26, 82, 118],    glow: [52, 152, 219],  width: 0.8,  label: '100–161',      order: 0 },
+  '220-287':      { color: [46, 134, 193],   glow: [93, 173, 226],  width: 1.2,  label: '220–287',      order: 1 },
+  '345':          { color: [243, 156, 18],    glow: [245, 176, 65],  width: 2.0,  label: '345',          order: 2 },
+  '500':          { color: [231, 76, 60],     glow: [236, 112, 99],  width: 3.0,  label: '500',          order: 3 },
+  '735 AND ABOVE':{ color: [255, 68, 204],    glow: [255, 119, 221], width: 4.5,  label: '735+',         order: 4 },
+  'DC':           { color: [0, 255, 170],     glow: [102, 255, 204], width: 3.5,  label: 'DC',           order: 5 },
+};
+
+let allData = null;
+let deckgl = null;
+let hiddenClasses = new Set();
+let activeStatus = 'all';
+
+// ── Loading ──
+function setLoading(pct, msg) {
+  document.getElementById('loading-bar').style.width = pct + '%';
+  document.getElementById('loading-status').textContent = msg;
+}
+
+// ── Build Legend ──
+function buildLegend(counts) {
+  const container = document.getElementById('legend-items');
+  container.innerHTML = '';
+  const entries = Object.entries(VOLT_CONFIG).sort((a,b) => b[1].order - a[1].order);
+  for (const [key, cfg] of entries) {
+    const count = counts[key] || 0;
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.dataset.voltClass = key;
+    item.onclick = () => toggleClass(key, item);
+
+    const line = document.createElement('div');
+    line.className = 'legend-line';
+    const w = Math.max(cfg.width * 2, 2);
+    line.style.width = '28px';
+    line.style.height = w + 'px';
+    line.style.background = `rgb(${cfg.glow.join(',')})`;
+    line.style.boxShadow = `0 0 6px rgba(${cfg.glow.join(',')}, 0.5)`;
+
+    const label = document.createElement('span');
+    label.className = 'legend-label';
+    label.textContent = cfg.label + ' kV';
+
+    const ct = document.createElement('span');
+    ct.className = 'legend-count';
+    ct.textContent = count.toLocaleString();
+
+    item.appendChild(line);
+    item.appendChild(label);
+    item.appendChild(ct);
+    container.appendChild(item);
+  }
+}
+
+// ── Toggle voltage class visibility ──
+function toggleClass(voltClass, el) {
+  if (hiddenClasses.has(voltClass)) {
+    hiddenClasses.delete(voltClass);
+    el.classList.remove('disabled');
+  } else {
+    hiddenClasses.add(voltClass);
+    el.classList.add('disabled');
+  }
+  updateLayer();
+}
+
+// ── Toggle status filter ──
+function toggleStatus(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeStatus = btn.dataset.status;
+  updateLayer();
+}
+
+// ── Filter data ──
+function getFilteredData() {
+  if (!allData) return [];
+  return allData.filter(f => {
+    const p = f.properties;
+    if (hiddenClasses.has(p.VOLT_CLASS)) return false;
+    if (activeStatus !== 'all' && p.STATUS !== activeStatus) return false;
+    return true;
+  });
+}
+
+// ── Update stats ──
+function updateStats(filtered) {
+  document.getElementById('stat-visible').textContent = filtered.length.toLocaleString();
+  const owners = new Set(filtered.map(f => f.properties.OWNER).filter(o => o && o !== 'NOT AVAILABLE'));
+  document.getElementById('stat-owners').textContent = owners.size.toLocaleString();
+  // Rough miles estimate from Shape__Length (meters)
+  let totalMeters = 0;
+  for (const f of filtered) {
+    totalMeters += f.properties.Shape__Length || 0;
+  }
+  const miles = Math.round(totalMeters / 1609.34);
+  document.getElementById('stat-miles').textContent = miles > 1000 ? (miles/1000).toFixed(0) + 'k' : miles.toLocaleString();
+}
+
+// ── Update deck.gl layer ──
+function updateLayer() {
+  if (!deckgl || !allData) return;
+  const filtered = getFilteredData();
+  updateStats(filtered);
+
+  const layer = new deck.GeoJsonLayer({
+    id: 'transmission-lines',
+    data: { type: 'FeatureCollection', features: filtered },
+    pickable: true,
+    autoHighlight: true,
+    highlightColor: [255, 255, 255, 80],
+    getLineColor: f => {
+      const cfg = VOLT_CONFIG[f.properties.VOLT_CLASS];
+      return cfg ? [...cfg.glow, 200] : [100, 100, 100, 100];
+    },
+    getLineWidth: f => {
+      const cfg = VOLT_CONFIG[f.properties.VOLT_CLASS];
+      return cfg ? cfg.width * 80 : 40;
+    },
+    lineWidthMinPixels: 0.5,
+    lineWidthMaxPixels: 8,
+    lineWidthUnits: 'meters',
+    onHover: onHover,
+    parameters: { depthTest: false },
+    updateTriggers: {
+      getLineColor: [hiddenClasses.size, activeStatus],
+      getLineWidth: [hiddenClasses.size, activeStatus],
+    },
+  });
+
+  // Glow layer for high-voltage lines
+  const glowLayer = new deck.GeoJsonLayer({
+    id: 'transmission-glow',
+    data: { type: 'FeatureCollection', features: filtered.filter(f => {
+      const vc = f.properties.VOLT_CLASS;
+      return vc === '345' || vc === '500' || vc === '735 AND ABOVE' || vc === 'DC';
+    })},
+    pickable: false,
+    getLineColor: f => {
+      const cfg = VOLT_CONFIG[f.properties.VOLT_CLASS];
+      return cfg ? [...cfg.glow, 40] : [100, 100, 100, 20];
+    },
+    getLineWidth: f => {
+      const cfg = VOLT_CONFIG[f.properties.VOLT_CLASS];
+      return cfg ? cfg.width * 400 : 80;
+    },
+    lineWidthMinPixels: 0,
+    lineWidthMaxPixels: 20,
+    lineWidthUnits: 'meters',
+    parameters: { depthTest: false },
+    updateTriggers: {
+      getLineColor: [hiddenClasses.size, activeStatus],
+      getLineWidth: [hiddenClasses.size, activeStatus],
+    },
+  });
+
+  deckgl.setProps({ layers: [glowLayer, layer] });
+}
+
+// ── Tooltip ──
+function onHover(info) {
+  const tooltip = document.getElementById('tooltip');
+  if (!info.object) {
+    tooltip.classList.remove('visible');
+    return;
+  }
+  const p = info.object.properties;
+  const cfg = VOLT_CONFIG[p.VOLT_CLASS];
+
+  document.getElementById('tt-voltage').textContent = (p.VOLTAGE || '?') + ' kV';
+  document.getElementById('tt-voltage').style.color = cfg ? `rgb(${cfg.glow.join(',')})` : '#ccc';
+  document.getElementById('tt-class').textContent = 'Class ' + (cfg ? cfg.label : p.VOLT_CLASS);
+
+  const cleanName = (s) => {
+    if (!s || s === 'NOT AVAILABLE') return '—';
+    return s.replace(/UNKNOWN\d+/g, 'Unknown').replace(/TAP\d+/g, 'Tap');
+  };
+
+  document.getElementById('tt-owner').textContent = cleanName(p.OWNER);
+  document.getElementById('tt-type').textContent = cleanName(p.TYPE);
+  document.getElementById('tt-status').textContent = cleanName(p.STATUS);
+  document.getElementById('tt-sub1').textContent = cleanName(p.SUB_1);
+  document.getElementById('tt-sub2').textContent = cleanName(p.SUB_2);
+
+  tooltip.style.left = (info.x + 16) + 'px';
+  tooltip.style.top = (info.y - 10) + 'px';
+  tooltip.classList.add('visible');
+}
+
+// ── Initialize ──
+async function init() {
+  setLoading(5, 'Initializing map...');
+
+  // Create map
+  const map = new maplibregl.Map({
+    container: 'map-container',
+    style: {
+      version: 8,
+      sources: {
+        'carto-dark': {
+          type: 'raster',
+          tiles: ['https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],
+          tileSize: 256,
+          attribution: '&copy; CARTO',
+        }
+      },
+      layers: [{
+        id: 'carto-dark-layer',
+        type: 'raster',
+        source: 'carto-dark',
+        paint: { 'raster-opacity': 0.6, 'raster-brightness-max': 0.5 }
+      }]
+    },
+    center: [-96, 38.5],
+    zoom: 4,
+    maxZoom: 16,
+    minZoom: 3,
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+  setLoading(15, 'Loading transmission data (103 MB)...');
+
+  // Fetch GeoJSON with progress
+  const response = await fetch('data/us-transmission-lines.geojson');
+  const reader = response.body.getReader();
+  const contentLength = +response.headers.get('Content-Length') || 108000000;
+  let received = 0;
+  const chunks = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    const pct = Math.min(15 + (received / contentLength) * 65, 80);
+    setLoading(pct, `Loading... ${(received / 1048576).toFixed(0)} / ${(contentLength / 1048576).toFixed(0)} MB`);
+  }
+
+  setLoading(82, 'Parsing JSON...');
+  const blob = new Blob(chunks);
+  const text = await blob.text();
+
+  setLoading(88, 'Building features...');
+  const geojson = JSON.parse(text);
+  allData = geojson.features;
+
+  // Count by class
+  const counts = {};
+  for (const f of allData) {
+    const vc = f.properties.VOLT_CLASS;
+    counts[vc] = (counts[vc] || 0) + 1;
+  }
+  buildLegend(counts);
+
+  setLoading(93, 'Rendering grid...');
+
+  // Create deck.gl overlay
+  deckgl = new deck.DeckGL({
+    container: 'map-container',
+    map: maplibregl,
+    mapStyle: {
+      version: 8,
+      sources: {
+        'carto-dark': {
+          type: 'raster',
+          tiles: ['https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],
+          tileSize: 256,
+        }
+      },
+      layers: [{
+        id: 'carto-dark-layer',
+        type: 'raster',
+        source: 'carto-dark',
+        paint: { 'raster-opacity': 0.55, 'raster-brightness-max': 0.45 }
+      }]
+    },
+    initialViewState: {
+      longitude: -96,
+      latitude: 38.5,
+      zoom: 4,
+      pitch: 0,
+      bearing: 0,
+    },
+    controller: true,
+    layers: [],
+    getTooltip: null,
+  });
+
+  // Remove the standalone map since deck.gl creates its own
+  const standalone = document.querySelector('#map-container > .maplibregl-map');
+  if (standalone) standalone.remove();
+
+  updateLayer();
+
+  setLoading(100, 'Complete');
+  setTimeout(() => {
+    document.getElementById('loading-overlay').classList.add('hidden');
+  }, 400);
+}
+
+init().catch(err => {
+  console.error(err);
+  setLoading(0, 'Error: ' + err.message);
+});
+</script>
+</body>
+</html>
