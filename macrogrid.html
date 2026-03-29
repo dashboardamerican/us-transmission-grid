@@ -677,6 +677,42 @@
     </div>
   </div>
 
+  <!-- Existing ROW reuse control -->
+  <div class="mg-control-panel" style="margin-top:20px; border-left: 3px solid #5F6368;">
+    <div class="mg-control-title">Existing Right-of-Way Reuse</div>
+    <div style="font-size:12px; color:var(--g-grey); margin-bottom:14px; line-height:1.5;">
+      What share of new backbone miles are built on corridors that already have a transmission line?
+      For those miles, only the <em>incremental</em> width beyond the existing ROW counts as new land.
+    </div>
+    <div class="mg-control-row">
+      <label>Reuse %</label>
+      <input type="range" min="0" max="100" step="5" value="0" id="row-reuse-pct">
+      <span class="mg-control-val" id="row-reuse-val">0% on existing ROW</span>
+    </div>
+    <div class="mg-control-row">
+      <label>Replacing</label>
+      <select id="row-reuse-voltage" style="
+        flex: 1;
+        font-family: inherit;
+        font-size: 12px;
+        padding: 5px 10px;
+        border: 1px solid var(--g-grey-border);
+        border-radius: 8px;
+        background: var(--g-surface);
+        color: var(--g-grey-dark);
+        cursor: pointer;
+      ">
+        <option value="85,60">100–161 kV (85 ft, ~60 MW)</option>
+        <option value="125,130">220–287 kV (125 ft, ~130 MW)</option>
+        <option value="175,400" selected>345 kV (175 ft, ~400 MW)</option>
+        <option value="225,900">500 kV (225 ft, ~900 MW)</option>
+      </select>
+    </div>
+    <div class="mg-control-result" id="row-reuse-result">
+      <span style="font-size:11px; color:var(--g-grey-light)">At 0% reuse, all new miles require full greenfield ROW</span>
+    </div>
+  </div>
+
   <div class="mg-section-label" style="margin-top:28px">Total U.S. transmission right-of-way by scenario</div>
   <svg id="mg-row-chart" width="780" height="340" style="margin-top:8px"></svg>
 
@@ -869,26 +905,61 @@
   let acDouble = false;
   let dcVoltage = 500;
   let dcDouble = false;
+  let reusePct = 0;        // 0–100
+  let reuseRowFt = 175;    // existing ROW width being replaced
+  let reuseCapMw = 400;    // existing line capacity (SIL) being replaced
 
   function calculate() {
     const acEffMw    = AC_BASE_MW * acConductor * (acDouble ? 2 : 1);
-    const acApGm     = acresPerGwMi(AC_ROW_FT, acEffMw);
-    const acNewAcres = AC_NEW_GW_MI * acApGm;
-
     const dcBaseMw   = hvdcCapacity(dcVoltage);
     const dcEffMw    = dcBaseMw * (dcDouble ? 2 : 1);
     const dcRow      = hvdcRowFt(dcVoltage);
-    const dcApGm     = acresPerGwMi(dcRow, dcEffMw);
-    const dcNewAcres = DC_NEW_GW_MI * dcApGm;
 
-    return { acEffMw, acNewAcres, dcBaseMw, dcEffMw, dcRow, dcNewAcres };
+    // Reuse: for the fraction built on existing ROW, only the incremental
+    // width (new ROW − existing ROW) counts. If new is narrower, net = 0.
+    const reuseFrac = reusePct / 100;
+    const greenFrac = 1 - reuseFrac;
+
+    // For reused corridors:
+    //  - Width: only incremental beyond existing ROW
+    //  - Capacity: only NET new capacity (new − replaced), since replaced
+    //    line already served load. Need more miles to hit same GW-mi target.
+    const acIncrFt    = Math.max(0, AC_ROW_FT - reuseRowFt);
+    const acNetCapMw  = Math.max(acEffMw * 0.1, acEffMw - reuseCapMw); // floor at 10%
+    const acApGmGreen = acresPerGwMi(AC_ROW_FT, acEffMw);
+    const acApGmReuse = acresPerGwMi(acIncrFt, acNetCapMw);
+    const acNewAcres  = AC_NEW_GW_MI * (greenFrac * acApGmGreen + reuseFrac * acApGmReuse);
+
+    const dcIncrFt    = Math.max(0, dcRow - reuseRowFt);
+    const dcNetCapMw  = Math.max(dcEffMw * 0.1, dcEffMw - reuseCapMw);
+    const dcApGmGreen = acresPerGwMi(dcRow, dcEffMw);
+    const dcApGmReuse = acresPerGwMi(dcIncrFt, dcNetCapMw);
+    const dcNewAcres  = DC_NEW_GW_MI * (greenFrac * dcApGmGreen + reuseFrac * dcApGmReuse);
+
+    return { acEffMw, acNewAcres, acNetCapMw, dcBaseMw, dcEffMw, dcRow, dcNewAcres, dcNetCapMw, acIncrFt, dcIncrFt };
   }
 
   function fmt(n) { return Math.round(n).toLocaleString(); }
   function fmtM(n) { return (n/1000000).toFixed(1) + 'M'; }
 
   function render() {
-    const { acEffMw, acNewAcres, dcBaseMw, dcEffMw, dcRow, dcNewAcres } = calculate();
+    const { acEffMw, acNewAcres, acNetCapMw, dcBaseMw, dcEffMw, dcRow, dcNewAcres, dcNetCapMw, acIncrFt, dcIncrFt } = calculate();
+
+    // ── Update reuse control display ──
+    document.getElementById('row-reuse-val').textContent =
+      reusePct + '% on existing ROW';
+    const reuseResult = document.getElementById('row-reuse-result');
+    if (reusePct === 0) {
+      reuseResult.innerHTML = '<span style="font-size:11px; color:var(--g-grey-light)">At 0% reuse, all new miles require full greenfield ROW</span>';
+    } else {
+      const savedAcresAc = AC_NEW_GW_MI * acresPerGwMi(AC_ROW_FT, acEffMw) - acNewAcres;
+      const savedAcresDc = DC_NEW_GW_MI * acresPerGwMi(dcRow, dcEffMw) - dcNewAcres;
+      reuseResult.innerHTML =
+        '<span style="font-size:11px; color:var(--g-grey)">' +
+        reusePct + '% of miles reuse existing ' + reuseRowFt + ' ft / ' + reuseCapMw + ' MW corridors.<br>' +
+        'AC: ' + acIncrFt + ' ft incremental width, ' + fmt(Math.round(acNetCapMw)) + ' MW net new cap → saves ' + fmtM(savedAcresAc) + ' acres.<br>' +
+        'HVDC: ' + dcIncrFt + ' ft incremental width, ' + fmt(Math.round(dcNetCapMw)) + ' MW net new cap → saves ' + fmtM(savedAcresDc) + ' acres.</span>';
+    }
 
     // ── Update control panel displays ──
     document.getElementById('ac-conductor-val').textContent =
@@ -921,11 +992,12 @@
     const pW=W-L-R, pH=H-T-B;
     const ns = 'http://www.w3.org/2000/svg';
 
+    const reuseNote = reusePct > 0 ? ' (' + reusePct + '% reuse)' : '';
     const SCENARIOS = [
       { label:'Today',            total:EXISTING_ACRES,                          added:0,              color:'#5F6368', note:'422K miles, all voltages' },
       { label:'+ Approved plans', total:EXISTING_ACRES + APPROVED_ACRES,         added:APPROVED_ACRES, color:'#4285F4', note:'+12,700 mi at 345 kV+' },
-      { label:'DOE AC scenario',  total:EXISTING_ACRES + Math.round(acNewAcres), added:Math.round(acNewAcres), color:'#FBBC04', note:acDesc },
-      { label:'DOE MT-HVDC',      total:EXISTING_ACRES + Math.round(dcNewAcres), added:Math.round(dcNewAcres), color:'#34A853', note:dcDesc },
+      { label:'DOE AC scenario',  total:EXISTING_ACRES + Math.round(acNewAcres), added:Math.round(acNewAcres), color:'#FBBC04', note:acDesc + reuseNote },
+      { label:'DOE MT-HVDC',      total:EXISTING_ACRES + Math.round(dcNewAcres), added:Math.round(dcNewAcres), color:'#34A853', note:dcDesc + reuseNote },
     ];
 
     const maxAcres = Math.max(...SCENARIOS.map(s => s.total), EXISTING_ACRES * 1.05);
@@ -1068,6 +1140,16 @@
     dcDouble = true;
     document.getElementById('dc-double').classList.add('active');
     document.getElementById('dc-single').classList.remove('active');
+    render();
+  });
+  document.getElementById('row-reuse-pct').addEventListener('input', e => {
+    reusePct = parseInt(e.target.value);
+    render();
+  });
+  document.getElementById('row-reuse-voltage').addEventListener('change', e => {
+    const parts = e.target.value.split(',');
+    reuseRowFt = parseInt(parts[0]);
+    reuseCapMw = parseInt(parts[1]);
     render();
   });
 
